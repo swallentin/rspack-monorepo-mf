@@ -1,0 +1,15 @@
+{
+  "name": "my-monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "yarn workspace remote1 dev & yarn workspace remote2 dev & yarn workspace host dev"
+  },
+  "devDependencies": {},
+  "dependencies": {
+    "rxjs": "^7.8.1",
+    "xstate": "^5.18.2"
+  }
+}

@@ -1,0 +1,48 @@
+# Ignore node_modules directory
+node_modules/
+
+# Ignore log files
+*.log
+
+# Ignore OS generated files
+.DS_Store
+Thumbs.db
+
+# Ignore environment variable files
+.env
+.env.local
+
+# Ignore build directories
+dist/
+build/
+
+# Ignore IDE specific files
+.vscode/
+.idea/
+
+# Ignore temporary files
+*.tmp
+*.swp
+
+# Ignore compiled files
+*.out
+*.class
+
+# Ignore coverage reports
+coverage/
+
+
+# Ignore Python cache files
+__pycache__/
+*.py[cod]
+
+# Ignore JavaScript map files
+*.map
+
+# Ignore macOS specific files
+.AppleDouble
+.LSOverride
+
+# Ignore Windows specific files
+Desktop.ini
+
