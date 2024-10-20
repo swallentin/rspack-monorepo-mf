@@ -58,8 +58,8 @@ The central orchestrator machine acts as the main controller that coordinates th
 #### Example: Orchestrator Machine with Actors
 
 ```typescript
-import { createMachine, assign, spawn } from "xstate";
-import { remote1Machine } from "./remote1Machine";
+import { createMachine } from "xstate";
+import { remote1Actor } from "remote1/stateMachine";
 
 export const orchestratorMachine = createMachine({
   id: "orchestrator",
@@ -69,9 +69,6 @@ export const orchestratorMachine = createMachine({
   },
   states: {
     initializing: {
-      entry: assign({
-        remote1Actor: () => spawn(remote1Machine, "remote1"),
-      }),
       on: {
         INIT_COMPLETE: "running",
       },
@@ -79,7 +76,7 @@ export const orchestratorMachine = createMachine({
     running: {
       on: {
         START_REMOTE1: {
-          actions: (context) => context.remote1Actor.send("START"),
+          actions: (context) => remote1Actor.send("START"),
         },
       },
     },
@@ -91,33 +88,53 @@ export const orchestratorMachine = createMachine({
 
 ### Inter-Micro-Frontend Communication with Epics
 
-Epics are used to manage asynchronous actions and side effects across micro-frontends. In the context of XState, epics can subscribe to state changes and trigger events on other state machines when specific states are entered.
+Epics are used to manage asynchronous actions and side effects across micro-frontends. In this project, there are two types of epics:
 
-#### Understanding Epics in XState
+1. **Event Bus to Actor Message Epics**: These epics map messages from an event bus to actor messages.
+2. **State to Actor Action Epics**: These epics map state changes to actions on other actors.
 
-In XState, you cannot directly subscribe to events, but you can subscribe to state changes. This allows you to check if a machine has entered a specific state and then trigger actions or events on another machine. This is where epics come into play.
+#### Example: Event Bus to Actor Message Epic
 
-#### Example: Creating an Epic
+```typescript
+import type { Observable } from "rxjs";
+import { filter, map, merge } from "rxjs";
+import { getEventStream as getRemote1EventStream } from "remote1/eventBus";
+import { getEventStream as getRemote2EventStream } from "remote2/eventBus";
+import type { Remote1Event } from "remote1/eventBus";
+import type { Remote2Event } from "remote2/eventBus";
+
+type OrchestratorEvent = Remote1Event | Remote2Event;
+
+const appEventStream = merge(getRemote1EventStream(), getRemote2EventStream());
+
+const processingCompleteEpic = appEventStream.pipe(
+  filter(
+    (event): event is Remote2Event => event.type === "PROCESSING_COMPLETE"
+  ),
+  map(() => ({ type: "ADD", message: "some message" }))
+);
+
+```
+
+#### Example: State to Actor Action Epic
 
 ```typescript
 import { Observable } from "rxjs";
 import { filter, map } from "rxjs/operators";
+import { State } from "xstate";
+import { Remote1Event, Remote2Event } from './eventTypes';
 
 const completeToProcessEpic = (input$: Observable<unknown>) =>
   input$.pipe(
-    filter((state) => state.matches("active")), // Check if the machine has entered the 'active' state
-    map(
-      () =>
-        ({
-          type: "PROCESS",
-        } as Remote2Event)
-    )
+    filter((state) => state.matches("active")),
+    map(() => ({
+      type: "PROCESS",
+    }))
   );
-
 // This epic listens for the 'active' state and triggers a 'PROCESS' event on another machine
-context.unsubscribeEpic = composeEpic(
-  context.remote1Actor,
-  context.remote2Actor,
+composeEpic(
+  remote1Actor,
+  remote2Actor,
   completeToProcessEpic
 );
 ```
