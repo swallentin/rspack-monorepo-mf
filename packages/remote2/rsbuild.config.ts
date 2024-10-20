@@ -13,8 +13,20 @@ export default defineConfig({
       exposes: {
         "./Button": "./src/Button.tsx",
         "./stateMachine": "./src/stateMachine.ts",
+        "./eventBus": "./src/eventBus.ts",
       },
-      shared: ["react", "react-dom"],
+      shared: {
+        react: {
+          singleton: true,
+          eager: true,
+          version: "18.3.1",
+        },
+        "react-dom": {
+          singleton: true,
+          eager: true,
+          version: "18.3.1",
+        },
+      },
     }),
   ],
 });

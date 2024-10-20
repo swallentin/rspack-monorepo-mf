@@ -1,20 +1,33 @@
-import { assign, createActor, createMachine } from "xstate";
-import { remote1Machine } from "remote1/stateMachine";
-import type { Remote1Event } from "remote1/stateMachine";
-import { remote2Machine } from "remote2/stateMachine";
-import type { Remote2Event } from "remote2/stateMachine";
+import { createActor, createMachine } from "xstate";
+import { remote1Actor } from "remote1/stateMachine";
+import { getEventStream as getRemote1EventStream } from "remote1/eventBus";
+import { getEventStream as getRemote2EventStream } from "remote2/eventBus";
+import type { Remote1Event } from "remote1/eventBus";
+import type { Remote2Event } from "remote2/eventBus";
+
+import { remote2Actor } from "remote2/stateMachine";
 import { composeEpic } from "./epicComposer";
 import type { Observable } from "rxjs";
-import { filter, map } from "rxjs/operators";
+import { filter, map, merge } from "rxjs";
+
+type OrchestratorEvent = Remote1Event | Remote2Event;
+
+const appEventStream = merge(getRemote1EventStream(), getRemote2EventStream());
+
+const processingCompleteEpic = appEventStream.pipe(
+  filter(
+    (event): event is Remote2Event => event.type === "PROCESSING_COMPLETE"
+  ),
+  map(() => ({ type: "ADD", message: "some message" }))
+);
 
 // Define the orchestrator machine
 const orchestratorMachine = createMachine(
   {
     id: "orchestrator",
     context: {
-      remote1Actor: null,
-      remote2Actor: null,
       unsubscribeEpic: null,
+      unsubscribeProcessingCompleteEpic: null,
     },
     initial: "initializing",
     states: {
@@ -37,33 +50,31 @@ const orchestratorMachine = createMachine(
   {
     actions: {
       spawnActors: ({ context }) => {
-        context.remote1Actor = createActor(remote1Machine).start();
-        context.remote2Actor = createActor(remote2Machine).start();
-
         const completeToProcessEpic = (input$: Observable<unknown>) =>
           input$.pipe(
             filter((state) => state.matches("active")),
-            map(
-              () =>
-                ({
-                  type: "PROCESS",
-                } as Remote2Event)
-            )
+            map(() => ({
+              type: "PROCESS",
+            }))
           );
 
         context.unsubscribeEpic = composeEpic(
-          context.remote1Actor,
-          context.remote2Actor,
+          remote1Actor,
+          remote2Actor,
           completeToProcessEpic
         );
+
+        context.unsubscribeProcessingCompleteEpic =
+          processingCompleteEpic.subscribe((action) => {
+            console.log("processingCompleteEpic", action);
+            remote1Actor.send(action);
+          });
       },
-      startRemote1: ({ context }) => {
-        console.log("Start Remote 1", context.remote1Actor);
-        context.remote1Actor?.send({ type: "START" });
+      startRemote1: () => {
+        remote1Actor?.send({ type: "START" });
       },
-      startRemote2: ({ context }) => {
-        console.log("Start Remote 2");
-        context.remote2Actor?.send({ type: "PROCESS" });
+      startRemote2: () => {
+        remote2Actor?.send({ type: "PROCESS" });
       },
     },
   }
