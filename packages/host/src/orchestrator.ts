@@ -18,7 +18,7 @@ const processingCompleteEpic = appEventStream.pipe(
   filter(
     (event): event is Remote2Event => event.type === "PROCESSING_COMPLETE"
   ),
-  map(() => ({ type: "ADD", message: "some message" }))
+  map(({ message }) => ({ type: "ADD", message }))
 );
 
 // Define the orchestrator machine
@@ -58,11 +58,11 @@ const orchestratorMachine = createMachine(
             }))
           );
 
-        context.unsubscribeEpic = composeEpic(
-          remote1Actor,
-          remote2Actor,
-          completeToProcessEpic
-        );
+        // context.unsubscribeEpic = composeEpic(
+        //   remote1Actor,
+        //   remote2Actor,
+        //   completeToProcessEpic
+        // );
 
         context.unsubscribeProcessingCompleteEpic =
           processingCompleteEpic.subscribe((action) => {

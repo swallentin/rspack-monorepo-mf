@@ -5,14 +5,38 @@ body {
   background-image: linear-gradient(to bottom, #020917, #101725);
 }
 
+.header {
+  width: 100%; /* Full width */
+  background-color: rgba(2, 9, 23, 0.8); /* Dark blue with transparency */
+  color: white; /* Text color */
+  padding: 20px; /* Padding for content */
+  text-align: center; /* Center the text */
+  box-sizing: border-box; /* Include padding in width calculation */
+}
+
 .content {
   display: flex;
-  min-height: 100vh;
+  width: 100%; /* Full width of the parent */
+  height: 100vh; /* Full height of the parent */
   line-height: 1.1;
-  text-align: center;
+  /* text-align: center;
   flex-direction: column;
-  justify-content: center;
+  justify-content: center; */
 }
+
+.panel {
+  flex: 1;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.left-panel {
+  background-color: rgba(55, 104, 202, 0.1); /* Light transparent overlay */
+}
+.right-panel {
+  background-color: rgba(16, 23, 37, 0.5); /* Slightly darker transparent overlay */
+}
+
 
 .content h1 {
   font-size: 3.6rem;

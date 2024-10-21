@@ -1,42 +1,47 @@
-import { createMachine, createActor, assign } from "xstate";
+import { setup, createActor, assign } from "xstate";
 
-export const remote1Machine = createMachine(
-  {
-    id: "remote1",
-    initial: "idle",
-    context: {
-      messages: [],
+type Context = {
+  messages: string[];
+};
+
+export const remote1Machine = setup({
+  types: {
+    context: {} as Context,
+  },
+
+  actions: {
+    logStart: () => {
+      console.log("remote1: START event received");
     },
-    states: {
-      idle: {
-        on: {
-          START: {
-            target: "active",
-            actions: "logStart",
-          },
+    add: assign({
+      messages: ({ context, event }) => [...context.messages, event.message],
+    }),
+  },
+}).createMachine({
+  id: "remote1",
+  initial: "idle",
+  context: {
+    messages: [],
+  },
+  states: {
+    idle: {
+      on: {
+        START: {
+          target: "active",
+          actions: "logStart",
         },
       },
-      active: {
-        on: {
-          STOP: "idle",
-          ADD: {
-            actions: "add",
-          },
+    },
+    active: {
+      on: {
+        STOP: "idle",
+        ADD: {
+          actions: "add",
         },
       },
     },
   },
-  {
-    actions: {
-      logStart: () => {
-        console.log("remote1: START event received");
-      },
-      add: assign({
-        messages: ({ context, event }) => [...context.messages, event.message],
-      }),
-    },
-  }
-);
+});
 
 export const remote1Actor = createActor(remote1Machine).start();
 export type Remote1Event = { type: "START" } | { type: "STOP" };

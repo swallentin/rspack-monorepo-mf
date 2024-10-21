@@ -10,25 +10,26 @@ import { useSelector } from '@xstate/react';
 const App = () => {
   const isActive = useSelector(remote1Actor, (state) => state.matches("active"));
   return (
-    <div className="content">
-      <h1>Rsbuild with React</h1>
-      <Provider1Button />
-      <Provider2Button />
-      <Paragraph />
-      <p>Start building amazing things with Rsbuild.</p>
-
-      <button onClick={() => orchestratorActor.send({ type: "START_REMOTE1" })}>
-        Start Remote 1
-      </button>
-      <button onClick={() => orchestratorActor.send({type: 'START_REMOTE2'})}>
-        Start Remote 2
-      </button>
-      <button
-        disabled={!isActive}
-        onClick={() => remote2Actor.send({ type: "COMPLETE" })}
-      >
-        Send message
-      </button>
+    <div>
+      <div className="header">
+        <h1>Rsbuild with React</h1>
+        <Paragraph />
+        <p>Start building amazing things with Rsbuild.</p>
+        <button onClick={() => orchestratorActor.send({ type: "START_REMOTE1" })}>
+          Start Remote 1
+        </button>
+        <button onClick={() => orchestratorActor.send({type: 'START_REMOTE2'})}>
+          Start Remote 2
+        </button>
+      </div>
+      <div className="content">
+        <div className="panel left-panel">
+        <Provider1Button />
+      </div>
+      <div className="panel right-panel">
+        <Provider2Button />
+      </div>  
+    </div>
     </div>
   );
 };

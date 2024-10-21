@@ -1,6 +1,6 @@
 import { Subject } from "rxjs";
 
-export type Remote2Event = { type: "PROCESSING_COMPLETE" };
+export type Remote2Event = { type: "PROCESSING_COMPLETE"; message: string };
 
 const remote2EventBus = new Subject<Remote2Event>();
 
